@@ -2,7 +2,7 @@
   "name": "hotel-cash-management",
   "private": true,
   "scripts": {
-    "heroku-postbuild": "npm ci --prefix frontend && npm --prefix frontend run build && rm -rf backend/app/static && mkdir -p backend/app/static && cp -R frontend/dist/* backend/app/static/"
+    "heroku-postbuild": "NPM_CONFIG_PRODUCTION=false npm ci --prefix frontend && npm --prefix frontend run build && rm -rf backend/app/static && mkdir -p backend/app/static && cp -R frontend/dist/* backend/app/static/"
   },
   "engines": {
     "node": "20.x"
