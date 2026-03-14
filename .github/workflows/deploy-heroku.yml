@@ -26,8 +26,9 @@ jobs:
           cd backend
           pytest
 
-      - name: Set up Heroku CLI
-        uses: heroku/actions/setup@v2
+      - name: Install Heroku CLI
+        run: |
+          curl https://cli-assets.heroku.com/install.sh | sh
 
       - name: Deploy
         env:
