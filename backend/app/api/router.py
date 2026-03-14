@@ -11,6 +11,7 @@ from app.api.routes import (
     expense_categories,
     audit_logs,
     health,
+    invites,
 )
 
 api_router = APIRouter()
@@ -25,3 +26,4 @@ api_router.include_router(tenants.router, prefix="/tenants", tags=["tenants"])
 api_router.include_router(expense_categories.router, prefix="/expense-categories", tags=["expense-categories"])
 api_router.include_router(audit_logs.router, prefix="/audit-logs", tags=["audit-logs"])
 api_router.include_router(health.router, tags=["health"])
+api_router.include_router(invites.router, prefix="/invites", tags=["invites"])

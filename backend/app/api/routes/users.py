@@ -1,25 +1,15 @@
 import uuid
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
-from sqlalchemy import func, select
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.authz import Role, require_roles
 from app.core.database import get_db
 from app.core.security import generate_totp_secret, totp_provisioning_uri
 from app.models.user import User
-from app.models.tenant import Tenant
-from app.schemas.user import (
-    UserInviteRequest,
-    UserInviteResponse,
-    UserRead,
-    UserSelfUpdate,
-    UserUpdate,
-    TotpSetupResponse,
-)
+from app.schemas.user import UserRead, UserSelfUpdate, UserUpdate, TotpSetupResponse
 from app.services.audit import add_audit_log, get_request_ip, get_request_user_id, model_to_dict
-from app.services.email import send_invite_email
-from app.services.background import schedule_task
 
 router = APIRouter()
 
@@ -114,67 +104,6 @@ async def list_users(
 ):
     result = await db.execute(select(User).order_by(User.created_at.desc()))
     return result.scalars().all()
-
-
-@router.post("", response_model=UserInviteResponse, status_code=status.HTTP_201_CREATED)
-async def invite_user(
-    payload: UserInviteRequest,
-    request: Request,
-    background_tasks: BackgroundTasks,
-    db: AsyncSession = Depends(get_db),
-    _role: Role = Depends(require_roles(Role.GLOBAL_ADMIN)),
-):
-    email = payload.email.strip().lower()
-    existing = await db.scalar(select(User).where(func.lower(User.email) == email))
-    if existing:
-        raise HTTPException(status_code=400, detail="Email already exists.")
-
-    try:
-        role = Role(payload.role.upper())
-    except ValueError as exc:
-        raise HTTPException(status_code=422, detail="Invalid role.") from exc
-
-    user = User(
-        tenant_id=payload.tenant_id,
-        first_name=payload.first_name,
-        last_name=payload.last_name,
-        email=email,
-        role=role.value,
-        is_active=True,
-        must_reset_password=False,
-        totp_secret=generate_totp_secret(),
-        totp_enabled=True,
-    )
-    db.add(user)
-    await db.flush()
-
-    tenant = await db.get(Tenant, payload.tenant_id)
-    property_name = tenant.hotel_name if tenant else "your property"
-    try:
-        schedule_task(background_tasks, send_invite_email, email, property_name)
-    except Exception:
-        pass
-
-    add_audit_log(
-        db,
-        tenant_id=user.tenant_id,
-        user_id=get_request_user_id(request),
-        action_type="INSERT",
-        table_name="users",
-        record_id=user.id,
-        old_values=None,
-        new_values=model_to_dict(user),
-        ip_address=get_request_ip(request),
-    )
-    await db.commit()
-    await db.refresh(user)
-
-    setup = TotpSetupResponse(
-        user_id=user.id,
-        secret=user.totp_secret,
-        otpauth_uri=totp_provisioning_uri(user.totp_secret, user.email),
-    )
-    return UserInviteResponse(user=user, message="Invite sent.", totp_setup=setup)
 
 
 @router.post("/{user_id}/totp", response_model=TotpSetupResponse)

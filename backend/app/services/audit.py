@@ -26,7 +26,7 @@ def model_to_dict(instance: Any) -> dict[str, Any]:
     mapper = sa_inspect(instance).mapper
     result: dict[str, Any] = {}
     for column in mapper.column_attrs:
-        if column.key in {"password_hash"}:
+        if column.key in {"password_hash", "totp_secret", "token_hash"}:
             continue
         result[column.key] = _serialize_value(getattr(instance, column.key))
     return result

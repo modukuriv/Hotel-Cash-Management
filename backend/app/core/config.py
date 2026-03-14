@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     mfa_code_expire_minutes: int = 10
     mfa_max_attempts: int = 5
     allow_admin_no_totp: bool = False
+    invite_expires_hours: int = 48
     login_rate_limit: int = 5
     login_rate_window_seconds: int = 60
     sentry_dsn: str | None = None

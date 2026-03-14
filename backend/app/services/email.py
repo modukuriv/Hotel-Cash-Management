@@ -25,13 +25,14 @@ def send_email(subject: str, body: str, recipient: str) -> bool:
     return True
 
 
-def send_invite_email(recipient: str, property_name: str) -> bool:
+def send_invite_email(recipient: str, property_name: str, invite_link: str) -> bool:
     subject = f"You're invited to {property_name} Hotel Cash"
     body = (
         f"You have been invited to access {property_name} Hotel Cash Management.\n\n"
+        f"Accept invite: {invite_link}\n\n"
         f"Login: {settings.frontend_url}/login\n"
         f"Email: {recipient}\n\n"
-        "Enter your email to receive a one-time verification code."
+        "Use the invite link above to set up Google Authenticator before signing in."
     )
     return send_email(subject, body, recipient)
 

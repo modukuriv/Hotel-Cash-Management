@@ -13,14 +13,6 @@ class UserBase(BaseModel):
     is_active: bool = True
 
 
-class UserInviteRequest(BaseModel):
-    email: EmailStr
-    role: str
-    tenant_id: uuid.UUID
-    first_name: str | None = None
-    last_name: str | None = None
-
-
 class UserUpdate(BaseModel):
     first_name: str | None = None
     last_name: str | None = None
@@ -48,12 +40,6 @@ class TotpSetupResponse(BaseModel):
     user_id: uuid.UUID
     secret: str
     otpauth_uri: str
-
-
-class UserInviteResponse(BaseModel):
-    user: UserRead
-    message: str
-    totp_setup: TotpSetupResponse | None = None
 
 
 class UserSelfUpdate(BaseModel):

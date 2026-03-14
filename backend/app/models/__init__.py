@@ -6,6 +6,7 @@ from app.models.refresh_token import RefreshToken
 from app.models.tenant import Tenant
 from app.models.user import User
 from app.models.weekly_cash_record import WeeklyCashRecord
+from app.models.user_invite import UserInvite
 
 __all__ = [
     "AuditLog",
@@ -16,4 +17,5 @@ __all__ = [
     "Tenant",
     "User",
     "WeeklyCashRecord",
+    "UserInvite",
 ]

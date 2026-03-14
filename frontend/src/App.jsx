@@ -7,6 +7,7 @@ import Reports from './pages/Reports.jsx';
 import Users from './pages/Users.jsx';
 import Profile from './pages/Profile.jsx';
 import Login from './pages/Login.jsx';
+import InviteSetup from './pages/InviteSetup.jsx';
 import NotFound from './pages/NotFound.jsx';
 import Nav from './components/Nav.jsx';
 import { useAuth } from './context/AuthContext.jsx';
@@ -27,6 +28,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/invite/:token" element={<InviteSetup />} />
           <Route
             path="/dashboard"
             element={

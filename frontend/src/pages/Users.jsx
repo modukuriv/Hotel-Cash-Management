@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import QRCode from 'qrcode';
 import api from '../services/api.js';
 
 const ROLE_OPTIONS = ['ADMIN', 'USER', 'GLOBAL_ADMIN'];
@@ -17,8 +16,7 @@ export default function Users() {
   const [tenants, setTenants] = useState([]);
   const [invite, setInvite] = useState(emptyInvite);
   const [inviteMessage, setInviteMessage] = useState('');
-  const [inviteSetup, setInviteSetup] = useState(null);
-  const [inviteQr, setInviteQr] = useState('');
+  const [inviteLink, setInviteLink] = useState('');
   const [editing, setEditing] = useState(null);
   const [editForm, setEditForm] = useState({ role: 'USER', is_active: true });
   const [loading, setLoading] = useState(false);
@@ -74,8 +72,7 @@ export default function Users() {
     setError('');
     setSuccess('');
     setInviteMessage('');
-    setInviteSetup(null);
-    setInviteQr('');
+    setInviteLink('');
     try {
       const payload = {
         email: invite.email,
@@ -84,13 +81,11 @@ export default function Users() {
         first_name: invite.first_name || null,
         last_name: invite.last_name || null,
       };
-      const { data } = await api.post('/users', payload);
+      const { data } = await api.post('/invites', payload);
       setInviteMessage(data.message || 'Invite sent.');
-      setSuccess(`User invited: ${data.user.email}`);
-      if (data.totp_setup) {
-        setInviteSetup(data.totp_setup);
-        const url = await QRCode.toDataURL(data.totp_setup.otpauth_uri);
-        setInviteQr(url);
+      setSuccess(`Invite sent to: ${data.email}`);
+      if (data.invite_link) {
+        setInviteLink(data.invite_link);
       }
       setInvite(emptyInvite);
       await loadUsers();
@@ -142,16 +137,22 @@ export default function Users() {
   const handleResetTotp = async (user) => {
     setError('');
     setSuccess('');
-    setInviteSetup(null);
-    setInviteQr('');
+    setInviteLink('');
     try {
       const { data } = await api.post(`/users/${user.id}/totp`);
-      setInviteSetup(data);
-      const url = await QRCode.toDataURL(data.otpauth_uri);
-      setInviteQr(url);
-      setSuccess(`Authenticator reset for ${user.email}`);
+      setSuccess(`Authenticator reset for ${user.email}. Share the new QR in the user's Profile page.`);
     } catch (err) {
       setError(err?.response?.data?.detail || 'Failed to reset authenticator.');
+    }
+  };
+
+  const handleCopyInvite = async () => {
+    if (!inviteLink) return;
+    try {
+      await navigator.clipboard.writeText(inviteLink);
+      setSuccess('Invite link copied.');
+    } catch (err) {
+      setError('Failed to copy invite link.');
     }
   };
   const handleDelete = async (userId) => {
@@ -221,14 +222,16 @@ export default function Users() {
           </div>
         </form>
         {inviteMessage && <p className="success">{inviteMessage}</p>}
-        {inviteSetup && (
+        {inviteLink && (
           <div className="card">
-            <h3>Authenticator Setup</h3>
-            <p>Scan this QR code in Google Authenticator for the invited user.</p>
-            {inviteQr && <img src={inviteQr} alt="Authenticator QR" />}
-            <p>
-              Secret: <strong>{inviteSetup.secret}</strong>
-            </p>
+            <h3>Invite Link</h3>
+            <p>Share this link with the user to complete setup.</p>
+            <div className="form-actions">
+              <input value={inviteLink} readOnly />
+              <button type="button" onClick={handleCopyInvite}>
+                Copy Link
+              </button>
+            </div>
           </div>
         )}
       </div>

@@ -33,6 +33,7 @@ export default function Login() {
     <section className="page">
       <h1>Sign In</h1>
       <p>Enter your email and Google Authenticator code.</p>
+      <p className="muted">New here? Use the invite link you received to set up access.</p>
       <form className="form" onSubmit={handleSubmit}>
         <label>
           Email
