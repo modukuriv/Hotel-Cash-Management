@@ -49,6 +49,6 @@ jobs:
           heroku buildpacks:add --index 2 heroku/python -a "$HEROKU_APP_NAME"
           git push heroku HEAD:main
           heroku ps:scale web=0 -a "$HEROKU_APP_NAME"
-          heroku run -a "$HEROKU_APP_NAME" "cd backend && python -m alembic upgrade head"
-          heroku run -a "$HEROKU_APP_NAME" "python backend/scripts/bootstrap_seed.py"
+          heroku run --size=Eco -a "$HEROKU_APP_NAME" "cd backend && python -m alembic upgrade head"
+          heroku run --size=Eco -a "$HEROKU_APP_NAME" "python backend/scripts/bootstrap_seed.py"
           heroku ps:scale web=1 -a "$HEROKU_APP_NAME"
