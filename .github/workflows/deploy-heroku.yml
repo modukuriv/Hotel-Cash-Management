@@ -50,4 +50,11 @@ jobs:
           git push heroku HEAD:main
           heroku ps:scale web=0 -a "$HEROKU_APP_NAME"
           heroku run --size=Eco -a "$HEROKU_APP_NAME" "cd backend && python -m alembic upgrade head && python scripts/bootstrap_seed.py"
+          for i in {1..30}; do
+            if heroku ps -a "$HEROKU_APP_NAME" | grep -q "run\\."; then
+              sleep 5
+            else
+              break
+            fi
+          done
           heroku ps:scale web=1 -a "$HEROKU_APP_NAME"
