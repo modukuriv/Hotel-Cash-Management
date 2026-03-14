@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: hotel_cash
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      ENV: production
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/hotel_cash
+      JWT_SECRET: change-me-in-prod
+      ALLOWED_ORIGINS: http://localhost:5173
+      ALLOW_ADMIN_NO_TOTP: "false"
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+
+volumes:
+  pgdata:

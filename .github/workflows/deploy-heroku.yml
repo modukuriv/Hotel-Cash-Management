@@ -1,0 +1,48 @@
+name: Deploy to Heroku
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install pytest
+
+      - name: Run backend tests
+        run: |
+          cd backend
+          pytest
+
+      - name: Set up Heroku CLI
+        uses: heroku/actions/setup@v2
+
+      - name: Deploy
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+          HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME }}
+        run: |
+          if [ -z "$HEROKU_API_KEY" ] || [ -z "$HEROKU_APP_NAME" ]; then
+            echo "Missing HEROKU_API_KEY or HEROKU_APP_NAME secrets" >&2
+            exit 1
+          fi
+          git remote remove heroku || true
+          git remote add heroku https://heroku:${HEROKU_API_KEY}@git.heroku.com/${HEROKU_APP_NAME}.git
+          heroku buildpacks:clear -a "$HEROKU_APP_NAME"
+          heroku buildpacks:add --index 1 heroku/nodejs -a "$HEROKU_APP_NAME"
+          heroku buildpacks:add --index 2 heroku/python -a "$HEROKU_APP_NAME"
+          git push heroku HEAD:main
+          heroku run -a "$HEROKU_APP_NAME" "cd backend && python -m alembic upgrade head"
+          heroku run -a "$HEROKU_APP_NAME" "python backend/scripts/bootstrap_seed.py"
